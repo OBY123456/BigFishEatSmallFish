@@ -1,0 +1,41 @@
+
+1040.png
+size: 512,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Shark01
+  rotate: false
+  xy: 74, 36
+  size: 29, 32
+  orig: 29, 32
+  offset: 0, 0
+  index: -1
+Shark02
+  rotate: true
+  xy: 384, 73
+  size: 118, 93
+  orig: 118, 93
+  offset: 0, 0
+  index: -1
+Shark03
+  rotate: false
+  xy: 5, 36
+  size: 375, 155
+  orig: 375, 155
+  offset: 0, 0
+  index: -1
+Shark04
+  rotate: 180
+  xy: 413, 7
+  size: 95, 86
+  orig: 95, 86
+  offset: 0, 0
+  index: -1
+Shark05
+  rotate: true
+  xy: 338, 6
+  size: 56, 71
+  orig: 56, 71
+  offset: 0, 0
+  index: -1

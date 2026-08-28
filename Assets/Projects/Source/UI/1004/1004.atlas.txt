@@ -1,0 +1,62 @@
+
+1004.png
+size: 424,136
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: true
+  xy: 18, 6
+  size: 30, 35
+  orig: 30, 35
+  offset: 0, 0
+  index: -1
+02
+  rotate: false
+  xy: 288, 11
+  size: 46, 46
+  orig: 46, 46
+  offset: 0, 0
+  index: -1
+03
+  rotate: true
+  xy: 392, 15
+  size: 33, 27
+  orig: 33, 27
+  offset: 0, 0
+  index: -1
+04
+  rotate: false
+  xy: 5, 9
+  size: 194, 122
+  orig: 194, 122
+  offset: 0, 0
+  index: -1
+05
+  rotate: true
+  xy: 288, 61
+  size: 69, 63
+  orig: 69, 63
+  offset: 0, 0
+  index: -1
+06
+  rotate: true
+  xy: 203, 9
+  size: 121, 81
+  orig: 121, 81
+  offset: 0, 0
+  index: -1
+07
+  rotate: true
+  xy: 338, 24
+  size: 52, 50
+  orig: 52, 50
+  offset: 0, 0
+  index: -1
+08
+  rotate: 180
+  xy: 376, 75
+  size: 33, 55
+  orig: 33, 55
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,62 @@
+
+1036.png
+size: 512,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: false
+  xy: 39, 13
+  size: 34, 35
+  orig: 34, 35
+  offset: 0, 0
+  index: -1
+02
+  rotate: false
+  xy: 228, 143
+  size: 10, 12
+  orig: 10, 12
+  offset: 0, 0
+  index: -1
+03
+  rotate: false
+  xy: 413, 109
+  size: 52, 46
+  orig: 52, 46
+  offset: 0, 0
+  index: -1
+04
+  rotate: false
+  xy: 5, 36
+  size: 248, 118
+  orig: 248, 118
+  offset: 0, 0
+  index: -1
+06
+  rotate: false
+  xy: 220, 11
+  size: 147, 75
+  orig: 147, 75
+  offset: 0, 0
+  index: -1
+07
+  rotate: true
+  xy: 423, 6
+  size: 125, 84
+  orig: 125, 84
+  offset: 0, 0
+  index: -1
+08
+  rotate: true
+  xy: 371, 37
+  size: 99, 113
+  orig: 99, 113
+  offset: 0, 0
+  index: -1
+09
+  rotate: false
+  xy: 257, 78
+  size: 152, 77
+  orig: 152, 77
+  offset: 0, 0
+  index: -1

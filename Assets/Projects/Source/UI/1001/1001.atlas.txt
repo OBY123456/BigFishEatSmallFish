@@ -1,0 +1,62 @@
+
+1001.png
+size: 376,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: true
+  xy: 277, 9
+  size: 36, 41
+  orig: 36, 41
+  offset: 0, 0
+  index: -1
+02
+  rotate: true
+  xy: 322, 6
+  size: 39, 32
+  orig: 39, 32
+  offset: 0, 0
+  index: -1
+03
+  rotate: false
+  xy: 32, 7
+  size: 23, 23
+  orig: 23, 23
+  offset: 0, 0
+  index: -1
+04
+  rotate: false
+  xy: 5, 9
+  size: 212, 115
+  orig: 212, 115
+  offset: 0, 0
+  index: -1
+05
+  rotate: true
+  xy: 277, 49
+  size: 75, 51
+  orig: 75, 51
+  offset: 0, 0
+  index: -1
+06
+  rotate: true
+  xy: 221, 5
+  size: 119, 52
+  orig: 119, 52
+  offset: 0, 0
+  index: -1
+07
+  rotate: true
+  xy: 332, 49
+  size: 39, 35
+  orig: 39, 35
+  offset: 0, 0
+  index: -1
+08
+  rotate: true
+  xy: 332, 92
+  size: 28, 40
+  orig: 28, 40
+  offset: 0, 0
+  index: -1

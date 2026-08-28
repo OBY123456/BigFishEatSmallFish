@@ -1,0 +1,62 @@
+
+1014.png
+size: 400,148
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: false
+  xy: 15, 8
+  size: 11, 22
+  orig: 11, 22
+  offset: 0, 0
+  index: -1
+02
+  rotate: false
+  xy: 30, 8
+  size: 35, 33
+  orig: 35, 33
+  offset: 0, 0
+  index: -1
+03
+  rotate: false
+  xy: 205, 15
+  size: 17, 23
+  orig: 17, 23
+  offset: 0, 0
+  index: -1
+04
+  rotate: 270
+  xy: 39, 108
+  size: 35, 34
+  orig: 35, 34
+  offset: 0, 0
+  index: -1
+05
+  rotate: false
+  xy: 338, 13
+  size: 48, 49
+  orig: 48, 49
+  offset: 0, 0
+  index: -1
+07
+  rotate: 270
+  xy: 231, 6
+  size: 136, 105
+  orig: 136, 111
+  offset: 0, 6
+  index: -1
+08
+  rotate: true
+  xy: 322, 61
+  size: 81, 70
+  orig: 81, 70
+  offset: 0, 0
+  index: -1
+09
+  rotate: false
+  xy: 5, 5
+  size: 242, 137
+  orig: 242, 137
+  offset: 0, 0
+  index: -1

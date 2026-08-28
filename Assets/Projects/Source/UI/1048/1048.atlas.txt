@@ -1,0 +1,62 @@
+
+1048.png
+size: 512,156
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+CockatooCichlid01
+  rotate: false
+  xy: 315, 14
+  size: 34, 38
+  orig: 34, 38
+  offset: 0, 0
+  index: -1
+CockatooCichlid02
+  rotate: false
+  xy: 100, 15
+  size: 6, 12
+  orig: 6, 12
+  offset: 0, 0
+  index: -1
+CockatooCichlid03
+  rotate: false
+  xy: 263, 6
+  size: 48, 48
+  orig: 48, 48
+  offset: 0, 0
+  index: -1
+CockatooCichlid04
+  rotate: false
+  xy: 5, 46
+  size: 273, 105
+  orig: 273, 105
+  offset: 0, 0
+  index: -1
+CockatooCichlid05
+  rotate: true
+  xy: 417, 9
+  size: 61, 90
+  orig: 61, 90
+  offset: 0, 0
+  index: -1
+CockatooCichlid06
+  rotate: true
+  xy: 5, 11
+  size: 31, 92
+  orig: 31, 92
+  offset: 0, 0
+  index: -1
+CockatooCichlid07
+  rotate: false
+  xy: 282, 56
+  size: 160, 95
+  orig: 160, 95
+  offset: 0, 0
+  index: -1
+CockatooCichlid08
+  rotate: 270
+  xy: 445, 55
+  size: 96, 58
+  orig: 96, 58
+  offset: 0, 0
+  index: -1

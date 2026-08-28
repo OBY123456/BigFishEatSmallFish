@@ -1,0 +1,76 @@
+
+1020.png
+size: 392,164
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: false
+  xy: 5, 9
+  size: 212, 150
+  orig: 212, 150
+  offset: 0, 0
+  index: -1
+02
+  rotate: false
+  xy: 347, 25
+  size: 33, 35
+  orig: 33, 35
+  offset: 0, 0
+  index: -1
+03
+  rotate: false
+  xy: 296, 6
+  size: 47, 44
+  orig: 47, 44
+  offset: 0, 0
+  index: -1
+04
+  rotate: false
+  xy: 26, 138
+  size: 15, 21
+  orig: 15, 21
+  offset: 0, 0
+  index: -1
+05
+  rotate: false
+  xy: 356, 64
+  size: 31, 31
+  orig: 31, 31
+  offset: 0, 0
+  index: -1
+06
+  rotate: true
+  xy: 287, 51
+  size: 108, 65
+  orig: 108, 65
+  offset: 0, 0
+  index: -1
+07
+  rotate: 270
+  xy: 208, 15
+  size: 120, 84
+  orig: 120, 84
+  offset: 0, 0
+  index: -1
+08
+  rotate: true
+  xy: 14, 9
+  size: 42, 42
+  orig: 42, 42
+  offset: 0, 0
+  index: -1
+09
+  rotate: false
+  xy: 356, 99
+  size: 31, 31
+  orig: 31, 31
+  offset: 0, 0
+  index: -1
+10
+  rotate: false
+  xy: 5, 141
+  size: 6, 18
+  orig: 6, 18
+  offset: 0, 0
+  index: -1

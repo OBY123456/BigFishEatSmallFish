@@ -1,0 +1,62 @@
+
+1037.png
+size: 512,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+01
+  rotate: false
+  xy: 5, 11
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+02
+  rotate: false
+  xy: 41, 7
+  size: 48, 41
+  orig: 48, 41
+  offset: 0, 0
+  index: -1
+03
+  rotate: false
+  xy: 5, 47
+  size: 244, 77
+  orig: 244, 77
+  offset: 0, 0
+  index: -1
+04
+  rotate: false
+  xy: 253, 63
+  size: 122, 61
+  orig: 122, 61
+  offset: 0, 0
+  index: -1
+05
+  rotate: false
+  xy: 340, 27
+  size: 95, 97
+  orig: 95, 97
+  offset: 0, 0
+  index: -1
+06
+  rotate: false
+  xy: 217, 10
+  size: 119, 46
+  orig: 119, 46
+  offset: 0, 0
+  index: -1
+07
+  rotate: false
+  xy: 93, 6
+  size: 47, 37
+  orig: 47, 37
+  offset: 0, 0
+  index: -1
+08
+  rotate: true
+  xy: 144, 24
+  size: 19, 52
+  orig: 19, 52
+  offset: 0, 0
+  index: -1

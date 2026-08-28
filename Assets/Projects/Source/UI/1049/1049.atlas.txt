@@ -1,0 +1,48 @@
+
+1049.png
+size: 328,212
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Viejafenestratus01
+  rotate: false
+  xy: 289, 39
+  size: 33, 35
+  orig: 33, 35
+  offset: 0, 0
+  index: -1
+Viejafenestratus02
+  rotate: true
+  xy: 258, 78
+  size: 59, 55
+  orig: 59, 55
+  offset: 0, 0
+  index: -1
+Viejafenestratus03
+  rotate: false
+  xy: 5, 84
+  size: 249, 124
+  orig: 249, 124
+  offset: 0, 0
+  index: -1
+Viejafenestratus04
+  rotate: false
+  xy: 5, 6
+  size: 168, 91
+  orig: 168, 91
+  offset: 0, 0
+  index: -1
+Viejafenestratus05
+  rotate: false
+  xy: 245, 155
+  size: 62, 53
+  orig: 62, 53
+  offset: 0, 0
+  index: -1
+Viejafenestratus06
+  rotate: false
+  xy: 174, 21
+  size: 111, 59
+  orig: 111, 59
+  offset: 0, 0
+  index: -1

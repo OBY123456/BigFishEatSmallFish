@@ -1,0 +1,55 @@
+
+1044.png
+size: 488,132
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+ElephantTrunk01
+  rotate: false
+  xy: 325, 6
+  size: 31, 31
+  orig: 31, 31
+  offset: 0, 0
+  index: -1
+ElephantTrunk02
+  rotate: false
+  xy: 422, 55
+  size: 53, 73
+  orig: 53, 73
+  offset: 0, 0
+  index: -1
+ElephantTrunk03
+  rotate: false
+  xy: 427, 23
+  size: 54, 28
+  orig: 54, 28
+  offset: 0, 0
+  index: -1
+ElephantTrunk04
+  rotate: false
+  xy: 5, 9
+  size: 264, 119
+  orig: 264, 119
+  offset: 0, 0
+  index: -1
+ElephantTrunk05
+  rotate: 270
+  xy: 251, 13
+  size: 115, 104
+  orig: 115, 104
+  offset: 0, 0
+  index: -1
+ElephantTrunk06
+  rotate: 180
+  xy: 357, 57
+  size: 71, 71
+  orig: 71, 71
+  offset: 0, 0
+  index: -1
+ElephantTrunk07
+  rotate: true
+  xy: 360, 29
+  size: 24, 63
+  orig: 24, 63
+  offset: 0, 0
+  index: -1
