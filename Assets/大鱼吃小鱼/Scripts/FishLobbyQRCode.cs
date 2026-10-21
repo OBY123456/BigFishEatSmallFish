@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using BestHTTP;
 using Encryption;
@@ -23,9 +24,26 @@ public class FishLobbyQRCode : MonoBehaviour
     private Texture2D runtimeTexture;
     private bool isLoading;
 
-    private void Start()
+    private IEnumerator Start()
     {
-        RefreshQRCode();
+        bool waitingLogged = false;
+        while (!isLoading)
+        {
+            string machineCode;
+            if (TryGetMachineCode(out machineCode))
+            {
+                RefreshQRCode();
+                yield break;
+            }
+
+            if (!waitingLogged)
+            {
+                Debug.LogWarning("[FishLobbyQRCode] 当前授权设备编码尚未就绪，正在等待授权缓存。", this);
+                waitingLogged = true;
+            }
+
+            yield return new WaitForSeconds(2f);
+        }
     }
 
     [ContextMenu("刷新小鱼进场二维码")]
@@ -224,24 +242,17 @@ public class FishLobbyQRCode : MonoBehaviour
     {
         machineCode = string.Empty;
 
-        if (MyMqtt.Instance != null &&!string.IsNullOrWhiteSpace(MyMqtt.Instance.MachineCode))
+        if (MyMqtt.Instance != null)
         {
-            machineCode = MyMqtt.Instance.MachineCode;
-            return true;
+            string mqttMachineCode = MyMqtt.Instance.MachineCode;
+            if (!string.IsNullOrWhiteSpace(mqttMachineCode))
+            {
+                machineCode = mqttMachineCode;
+                return true;
+            }
         }
 
-        string value = string.Empty;
-        string decrypted = string.Empty;
-
-        AESEncryption.PlayerGet(Authorization.MachineKey,HardwareCodeUtil.GetMac(),ref value,ref decrypted);
-
-        if (!string.IsNullOrWhiteSpace(value) &&value.Equals(decrypted))
-        {
-            machineCode = value;
-            return true;
-        }
-
-        return false;
+        return Authorization.TryGetStoredMachineCode(out machineCode);
     }
 
     private void OnDestroy()

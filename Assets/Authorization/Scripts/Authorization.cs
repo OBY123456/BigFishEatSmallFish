@@ -175,6 +175,12 @@ namespace Encryption
         private const string NewTimeKey_EN = "TimeCode_EN";
         private const string NewGrantSourceKey_EN = "GrantSource_EN";
 
+        // Cache hardware identifiers for QR/MQTT lookups so the Windows hardware query is not repeated every few seconds.
+        private static bool storedMachineCodeHardwareCacheReady;
+        private static string storedMachineCodeRawHardware = string.Empty;
+        private static string storedMachineCodeCnHardware = string.Empty;
+        private static string storedMachineCodeEnHardware = string.Empty;
+
         // True：发现旧版三 Key 且没有 GrantSource，整个运行周期都走旧授权流程。
         // False：走新版授权/付款流程。
         private bool useLegacyAuthorizationSystem = false;
@@ -555,7 +561,7 @@ namespace Encryption
             authorizationLanguageInitialized = true;
         }
 
-        private string BuildLanguageHardwareCode(string baseHardwareCode, bool english)
+        private static string BuildLanguageHardwareCode(string baseHardwareCode, bool english)
         {
             string languageTag = english ? "EN" : "CN";
             string source =
@@ -579,6 +585,96 @@ namespace Encryption
 
                 return builder.ToString();
             }
+        }
+
+        private static void EnsureStoredMachineCodeHardwareCache()
+        {
+            if (storedMachineCodeHardwareCacheReady) return;
+
+            try
+            {
+                storedMachineCodeRawHardware = HardwareCodeUtil.GetMac() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(storedMachineCodeRawHardware))
+                {
+                    storedMachineCodeCnHardware = BuildLanguageHardwareCode(storedMachineCodeRawHardware, false);
+                    storedMachineCodeEnHardware = BuildLanguageHardwareCode(storedMachineCodeRawHardware, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[Authorization] Failed to read hardware code for QR/MQTT lookup: " + ex.Message);
+            }
+
+            storedMachineCodeHardwareCacheReady = true;
+        }
+
+        private static bool TryReadStoredMachineCode(string key, string hardwareCode, out string machineCode)
+        {
+            machineCode = string.Empty;
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(hardwareCode) || !PlayerPrefs.HasKey(key))
+                return false;
+
+            string value = string.Empty;
+            string decrypted = string.Empty;
+            try
+            {
+                AESEncryption.PlayerGet(key, hardwareCode, ref value, ref decrypted);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(value) || !string.Equals(value, decrypted, StringComparison.Ordinal))
+                return false;
+
+            machineCode = value;
+            return true;
+        }
+
+        /// <summary>
+        /// Read the machine code using the same key and hardware-code rules as the active authorization flow.
+        /// Supports current CN/EN storage, legacy storage, and the shared-key migration format.
+        /// </summary>
+        public static bool TryGetStoredMachineCode(out string machineCode)
+        {
+            machineCode = string.Empty;
+            EnsureStoredMachineCodeHardwareCache();
+            if (string.IsNullOrWhiteSpace(storedMachineCodeRawHardware)) return false;
+
+            bool hasSharedGrantSource = PlayerPrefs.HasKey(GrantSourceKey);
+            bool legacyMode = !hasSharedGrantSource &&
+                (PlayerPrefs.HasKey(MachineKey) || PlayerPrefs.HasKey(DateKey) || PlayerPrefs.HasKey(TimeKey));
+
+            // Match Authorization.HasLegacySystemData(): old shared keys without GrantSource take priority.
+            if (legacyMode)
+                return TryReadStoredMachineCode(MachineKey, storedMachineCodeRawHardware, out machineCode);
+
+            // Do not guess a language before LanguageManger is ready; otherwise CN/EN keys could be mixed.
+            if (LanguageManger.Instance == null) return false;
+
+            bool english;
+            try
+            {
+                english = LanguageManger.Instance.GetLanguageType() == LanguageType.英文;
+            }
+            catch
+            {
+                return false;
+            }
+
+            string currentKey = english ? NewMachineKey_EN : NewMachineKey_CN;
+            string currentHardware = english ? storedMachineCodeEnHardware : storedMachineCodeCnHardware;
+            if (TryReadStoredMachineCode(currentKey, currentHardware, out machineCode)) return true;
+
+            // Older transitional builds stored machineCode under the shared key with GrantSource.
+            if (hasSharedGrantSource)
+            {
+                if (TryReadStoredMachineCode(MachineKey, currentHardware, out machineCode)) return true;
+                if (TryReadStoredMachineCode(MachineKey, storedMachineCodeRawHardware, out machineCode)) return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -1,0 +1,436 @@
+{
+  "version": 1,
+  "note": "文件扩展名为.txt，内容仍是JSON；修改value即可。Prefab、数组、Transform、Camera引用只在Inspector绑定。",
+  "parameters": [
+    {
+      "name": "globalBaseSpeed",
+      "description": "所有鱼的1级基础游动速度，其他等级在此速度上按比例递增",
+      "type": "Single",
+      "value": 1.0
+    },
+    {
+      "name": "levelSpeedIncreasePerLevel",
+      "description": "每提高1级的基础移速增长比例：0.1代表每级增加10%，2级为1.1倍、3级为1.2倍",
+      "type": "Single",
+      "value": 0.1
+    },
+    {
+      "name": "initialNpcCount",
+      "description": "玩家进场后的普通NPC目标数量（无人时约一半）",
+      "type": "Int32",
+      "value": 20
+    },
+    {
+      "name": "initialSpecialCount",
+      "description": "普通特殊鱼及鲨鱼在场的基础数量上限，随平均等级增加",
+      "type": "Int32",
+      "value": 3
+    },
+    {
+      "name": "specialFishBaseChance",
+      "description": "每次NPC刷新时尝试生成特殊鱼的基础概率（0.06=6%）",
+      "type": "Single",
+      "value": 0.06
+    },
+    {
+      "name": "specialFishChancePerPlayer",
+      "description": "每名在场玩家给特殊鱼增加的概率（0.006=0.6%）",
+      "type": "Single",
+      "value": 0.006
+    },
+    {
+      "name": "specialExtraPerAverageLevel",
+      "description": "玩家平均等级每提高一级，额外允许存在的特殊鱼数量",
+      "type": "Single",
+      "value": 0.4
+    },
+    {
+      "name": "lightningBuffDuration",
+      "description": "闪电鱼被吃后给玩家的2.5倍加速持续时间，秒",
+      "type": "Single",
+      "value": 10.0
+    },
+    {
+      "name": "giantBonusDuration",
+      "description": "巨人鱼被吃后玩家临时提升一级持续时间，秒",
+      "type": "Single",
+      "value": 10.0
+    },
+    {
+      "name": "sharkSpeedMultiplier",
+      "description": "鲨鱼在正常游动时使用的速度倍率",
+      "type": "Single",
+      "value": 1.3
+    },
+    {
+      "name": "keepEveryNpcTypeVisible",
+      "description": "无人时是否保证每种已配置NPC至少有一条（无人时先生成 initialNpcCount 的一半；若种类更多则保证每种至少一条）",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "npcPopulationCheckInterval",
+      "description": "检查并补充普通NPC鱼的间隔秒数",
+      "type": "Single",
+      "value": 1.0
+    },
+    {
+      "name": "useEntityRootZ",
+      "description": "是否以实体根节点的世界Z坐标作为鱼平面",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "fishPlaneZ",
+      "description": "未使用实体根节点Z时的鱼所在世界Z平面",
+      "type": "Single",
+      "value": 0.0
+    },
+    {
+      "name": "screenEdgePadding",
+      "description": "鱼在屏幕四周保留的投影范围百分比",
+      "type": "Single",
+      "value": 0.02
+    },
+    {
+      "name": "bottomBoundaryOffset",
+      "description": "鱼活动下边界相对相机计算值向上调整的距离（下边界偏移：正数向上收缩，负数向下扩展）",
+      "type": "Single",
+      "value": 1.64
+    },
+    {
+      "name": "topBoundaryOffset",
+      "description": "鱼活动上边界相对相机计算值向下调整的距离（上边界偏移：正数向下收缩，负数向上扩展）",
+      "type": "Single",
+      "value": 1.09
+    },
+    {
+      "name": "localPlayerSpawnKey",
+      "description": "在编辑器中按此键创建本地键盘调试鱼",
+      "type": "KeyCode",
+      "value": "F8"
+    },
+    {
+      "name": "playerSpawnInvincibleSeconds",
+      "description": "玩家出生或复活后无敌持续秒数",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "localBoostMultiplier",
+      "description": "键盘空格和MQTT加速时的速度倍率",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "initialItemCount",
+      "description": "首次创建及低平均等级时的道具基础数量",
+      "type": "Int32",
+      "value": 4
+    },
+    {
+      "name": "itemBaseChance",
+      "description": "每次道具刷新判定的基础概率（0.04=4%）",
+      "type": "Single",
+      "value": 0.04
+    },
+    {
+      "name": "itemChancePerPlayer",
+      "description": "每名玩家给道具刷新增加的概率（0.004=0.4%）",
+      "type": "Single",
+      "value": 0.004
+    },
+    {
+      "name": "itemExtraPerAverageLevel",
+      "description": "玩家平均等级每提高一级，可额外出现的道具数量",
+      "type": "Single",
+      "value": 0.5
+    },
+    {
+      "name": "maxItemCount",
+      "description": "场景同时存在的道具最大数量",
+      "type": "Int32",
+      "value": 8
+    },
+    {
+      "name": "itemRespawnInterval",
+      "description": "道具被拾取后补充道具的检查间隔，单位秒",
+      "type": "Single",
+      "value": 4.0
+    },
+    {
+      "name": "itemSpawnCenterRatio",
+      "description": "道具出生的中心区域比例（0.6表示屏幕中央60%宽高）",
+      "type": "Single",
+      "value": 0.6
+    },
+    {
+      "name": "itemMinSpacing",
+      "description": "两件道具之间的最小中心距离，世界单位",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "itemVortexSpacing",
+      "description": "道具与漩涡之间的最小中心距离，世界单位",
+      "type": "Single",
+      "value": 0.8
+    },
+    {
+      "name": "itemPlacementAttempts",
+      "description": "单次寻找道具空位的最大随机尝试次数",
+      "type": "Int32",
+      "value": 50
+    },
+    {
+      "name": "initialVortexCount",
+      "description": "每次漩涡风暴事件开始时创建的漩涡数量，至少1个",
+      "type": "Int32",
+      "value": 0
+    },
+    {
+      "name": "maxActiveVortices",
+      "description": "屏幕内同时存在的漩涡数量上限，至少1个",
+      "type": "Int32",
+      "value": 2
+    },
+    {
+      "name": "vortexSpawnIntervalMin",
+      "description": "两次随机生成漩涡的最短间隔，单位秒",
+      "type": "Single",
+      "value": 20.0
+    },
+    {
+      "name": "vortexSpawnIntervalMax",
+      "description": "两次随机生成漩涡的最长间隔，单位秒",
+      "type": "Single",
+      "value": 20.0
+    },
+    {
+      "name": "vortexLifetimeMin",
+      "description": "单个漩涡的最短存在时间，单位秒",
+      "type": "Single",
+      "value": 5.0
+    },
+    {
+      "name": "vortexLifetimeMax",
+      "description": "单个漩涡的最长存在时间，单位秒",
+      "type": "Single",
+      "value": 14.0
+    },
+    {
+      "name": "vortexMoveSpeed",
+      "description": "漩涡中心位置移动速度，世界单位/秒",
+      "type": "Single",
+      "value": 0.8
+    },
+    {
+      "name": "vortexTurnIntervalMin",
+      "description": "漩涡最短随机转向间隔，单位秒",
+      "type": "Single",
+      "value": 1.2
+    },
+    {
+      "name": "vortexTurnIntervalMax",
+      "description": "漩涡最长随机转向间隔，单位秒",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "vortexAttractionRadius",
+      "description": "漩涡吸附作用范围半径，世界单位",
+      "type": "Single",
+      "value": 2.5
+    },
+    {
+      "name": "vortexCaptureRadius",
+      "description": "靠近漩涡中心此半径后直接锁定中心，世界单位",
+      "type": "Single",
+      "value": 0.25
+    },
+    {
+      "name": "vortexPullSpeed",
+      "description": "漩涡把鱼拉向中心的基础速度，世界单位/秒",
+      "type": "Single",
+      "value": 2.5
+    },
+    {
+      "name": "itemVortexPullSpeed",
+      "description": "拾取漩涡道具后将附近低等级鱼吸向中心的速度，世界单位每秒",
+      "type": "Single",
+      "value": 4.0
+    },
+    {
+      "name": "vortexReleaseEatDelay",
+      "description": "漩涡消失后，鱼继续禁止吞噬的时间，单位秒",
+      "type": "Single",
+      "value": 2.0
+    },
+    {
+      "name": "vortexVisualDiameter",
+      "description": "漩涡临时占位图片的直径；使用自己的Prefab时作为参考值",
+      "type": "Single",
+      "value": 1.0
+    },
+    {
+      "name": "vortexEventScaleMultiplier",
+      "description": "漩涡事件Prefab的额外缩放倍率；用于与道具共用Prefab时增强可见性",
+      "type": "Single",
+      "value": 1.5
+    },
+    {
+      "name": "vortexSpawnCenterRatio",
+      "description": "兼容旧配置：事件漩涡按全屏范围生成，不再使用中心区域比例（保留此字段以兼容旧场景和JSON配置；漩涡风暴现在使用完整相机活动范围，此值不再影响生成位置。）",
+      "type": "Single",
+      "value": 0.65
+    },
+    {
+      "name": "vortexMinSpacing",
+      "description": "漩涡与其他漩涡的最小生成距离，世界单位",
+      "type": "Single",
+      "value": 1.4
+    },
+    {
+      "name": "vortexPlacementAttempts",
+      "description": "单次寻找漩涡出生位置的随机尝试次数",
+      "type": "Int32",
+      "value": 50
+    },
+    {
+      "name": "vortexAffectsPlayers",
+      "description": "漩涡是否吸附玩家鱼",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "vortexAffectsNpc",
+      "description": "漩涡是否吸附普通NPC鱼",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "vortexAffectsSpecialFish",
+      "description": "漩涡是否吸附特殊鱼（含鲨鱼）",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "specialEventIntervalMin",
+      "description": "两次随机事件之间的最短等待时间，秒",
+      "type": "Single",
+      "value": 30.0
+    },
+    {
+      "name": "specialEventIntervalMax",
+      "description": "两次事件之间的最长等待时间，秒；只有等待时间随机，事件按顺序轮换",
+      "type": "Single",
+      "value": 60.0
+    },
+    {
+      "name": "firstSpecialEventType",
+      "description": "事件轮换从哪种开始：1疯狂海域、2极光祝福、3漩涡风暴",
+      "type": "Int32",
+      "value": 1
+    },
+    {
+      "name": "madnessEventDuration",
+      "description": "疯狂海域事件持续时间，秒",
+      "type": "Single",
+      "value": 15.0
+    },
+    {
+      "name": "madnessSpeedMultiplier",
+      "description": "疯狂海域期间非玩家鱼移动和游泳动画速度倍率；默认2.2倍",
+      "type": "Single",
+      "value": 1.6
+    },
+    {
+      "name": "madnessRefreshMultiplier",
+      "description": "疯狂海域期间NPC刷新检查加速倍率；默认3倍，更容易看到补鱼",
+      "type": "Single",
+      "value": 2.0
+    },
+    {
+      "name": "madnessNpcExtraCount",
+      "description": "疯狂海域期间额外允许存在的普通NPC数量；事件结束后恢复平时数量",
+      "type": "Int32",
+      "value": 8
+    },
+    {
+      "name": "madnessNpcSpawnPerTick",
+      "description": "疯狂海域每次刷新检查最多补充多少条NPC；与刷新倍率共同生效",
+      "type": "Int32",
+      "value": 3
+    },
+    {
+      "name": "darknessFlashDuration",
+      "description": "疯狂海域黑暗的间歇时长，秒",
+      "type": "Single",
+      "value": 2.0
+    },
+    {
+      "name": "darknessFlashIntervalMin",
+      "description": "疯狂海域随机黑暗之间的最短间隔，秒",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "darknessFlashIntervalMax",
+      "description": "疯狂海域随机黑暗之间的最长间隔，秒",
+      "type": "Single",
+      "value": 6.0
+    },
+    {
+      "name": "darknessOpacity",
+      "description": "疯狂海域黑暗叠加层的不透明度",
+      "type": "Single",
+      "value": 0.72
+    },
+    {
+      "name": "auroraEventDuration",
+      "description": "极光祝福事件持续时间，秒",
+      "type": "Single",
+      "value": 15.0
+    },
+    {
+      "name": "auroraScoreMultiplier",
+      "description": "极光祝福期间本次吞噬获得的积分倍率",
+      "type": "Single",
+      "value": 1.5
+    },
+    {
+      "name": "vortexStormDuration",
+      "description": "漩涡风暴随机事件持续时间，秒",
+      "type": "Single",
+      "value": 18.0
+    },
+    {
+      "name": "upgradeEffectDuration",
+      "description": "升级特效在鱼身上持续显示的时间，单位秒",
+      "type": "Single",
+      "value": 3.0
+    },
+    {
+      "name": "upgradeEffectLocalOffset",
+      "description": "升级特效相对玩家鱼根节点的局部位置偏移",
+      "type": "Vector3",
+      "value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    {
+      "name": "upgradeEffectInFront",
+      "description": "是否让升级特效自动使用玩家鱼的渲染层级并显示在鱼前面",
+      "type": "Boolean",
+      "value": true
+    },
+    {
+      "name": "debugPanelScale",
+      "description": "F5运行时参数面板缩放倍率；可以在JSON中设置",
+      "type": "Single",
+      "value": 1.0
+    }
+  ]
+}

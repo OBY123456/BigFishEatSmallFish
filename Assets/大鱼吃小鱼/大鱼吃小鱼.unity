@@ -32116,6 +32116,7 @@ GameObject:
   - component: {fileID: 1116467703}
   - component: {fileID: 1116467704}
   - component: {fileID: 1116467705}
+  - component: {fileID: 1116467706}
   m_Layer: 0
   m_Name: "\u7BA1\u7406\u5668"
   m_TagString: Untagged
@@ -32164,6 +32165,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   globalBaseSpeed: 1
+  levelSpeedIncreasePerLevel: 0.1
   initialNpcCount: 20
   initialSpecialCount: 3
   specialFishBaseChance: 0.06
@@ -32226,7 +32228,7 @@ MonoBehaviour:
   itemMinSpacing: 3
   itemVortexSpacing: 0.8
   itemPlacementAttempts: 50
-  vortexEventPrefab: {fileID: 7894032419878886013, guid: e0aa34225b376a943951cf2e56f36ef2,
+  vortexEventPrefab: {fileID: 2734982453857266268, guid: ca711eee10b5d144ca4241ae295c4d26,
     type: 3}
   initialVortexCount: 0
   maxActiveVortices: 2
@@ -32243,6 +32245,7 @@ MonoBehaviour:
   itemVortexPullSpeed: 4
   vortexReleaseEatDelay: 2
   vortexVisualDiameter: 1
+  vortexEventScaleMultiplier: 1.5
   vortexSpawnCenterRatio: 0.65
   vortexMinSpacing: 1.4
   vortexPlacementAttempts: 50
@@ -32255,13 +32258,14 @@ MonoBehaviour:
     type: 3}
   auroraEventPrefab: {fileID: 0}
   darknessOverlayPrefab: {fileID: 0}
-  itemVortexEffectPrefab: {fileID: 2734982453857266268, guid: ca711eee10b5d144ca4241ae295c4d26,
-    type: 3}
   specialEventIntervalMin: 30
   specialEventIntervalMax: 60
+  firstSpecialEventType: 1
   madnessEventDuration: 15
   madnessSpeedMultiplier: 1.6
   madnessRefreshMultiplier: 2
+  madnessNpcExtraCount: 8
+  madnessNpcSpawnPerTick: 3
   darknessFlashDuration: 2
   darknessFlashIntervalMin: 3
   darknessFlashIntervalMax: 6
@@ -32272,8 +32276,21 @@ MonoBehaviour:
   upgradeEffectDuration: 3
   upgradeEffectLocalOffset: {x: 0, y: 0, z: 0}
   upgradeEffectInFront: 1
+  debugPanelScale: 1
   minBounds: {x: 0, y: 0}
   maxBounds: {x: 0, y: 0}
+--- !u!114 &1116467706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116467702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9660125dbdf94284481165ee2ffc69c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1117871986
 GameObject:
   m_ObjectHideFlags: 0

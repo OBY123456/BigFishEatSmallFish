@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Lean.Pool;
 using MqttData;
 using Newtonsoft.Json.Linq;
@@ -110,10 +110,10 @@ public class FishManager : MonoBehaviour
     [Header("漩涡风暴使用的特效预制体；建议拖入独立的 ParticleSystem Prefab")]
     [Tooltip("没有填写时自动创建占位旋涡图片；所有漩涡产生与回收都由 LeanPool 完成。")]
     public GameObject vortexEventPrefab;
-    [Header("每次漩涡风暴事件开始时创建的漩涡数量")]
-    [Min(0)] public int initialVortexCount = 2;
-    [Header("屏幕内同时存在的漩涡数量上限")]
-    [Min(0)] public int maxActiveVortices = 3;
+    [Header("每次漩涡风暴事件开始时创建的漩涡数量，至少1个")]
+    [Min(1)] public int initialVortexCount = 2;
+    [Header("屏幕内同时存在的漩涡数量上限，至少1个")]
+    [Min(1)] public int maxActiveVortices = 3;
     [Header("两次随机生成漩涡的最短间隔，单位秒")]
     [Min(0.5f)] public float vortexSpawnIntervalMin = 12f;
     [Header("两次随机生成漩涡的最长间隔，单位秒")]
@@ -138,9 +138,12 @@ public class FishManager : MonoBehaviour
     [Min(0f)] public float itemVortexPullSpeed = 4f;
     [Header("漩涡消失后，鱼继续禁止吞噬的时间，单位秒")]
     [Min(0f)] public float vortexReleaseEatDelay = 2f;
-    [Header("漩涡临时占位图片的直径，使用自己的Prefab时无效")]
+    [Header("漩涡临时占位图片的直径；使用自己的Prefab时作为参考值")]
     [Min(0.1f)] public float vortexVisualDiameter = 1f;
-    [Header("漩涡出生中心区域比例（0.65表示中央65%宽高）")]
+    [Header("漩涡事件Prefab的额外缩放倍率；用于与道具共用Prefab时增强可见性")]
+    [Min(0.1f)] public float vortexEventScaleMultiplier = 1.5f;
+    [Header("兼容旧配置：事件漩涡按全屏范围生成，不再使用中心区域比例")]
+    [Tooltip("保留此字段以兼容旧场景和JSON配置；漩涡风暴现在使用完整相机活动范围，此值不再影响生成位置。")]
     [Range(0.1f, 1f)] public float vortexSpawnCenterRatio = 0.65f;
     [Header("漩涡与其他漩涡的最小生成距离，世界单位")]
     [Min(0f)] public float vortexMinSpacing = 1.4f;
@@ -165,14 +168,20 @@ public class FishManager : MonoBehaviour
 
     [Header("两次随机事件之间的最短等待时间，秒")]
     [Min(1f)] public float specialEventIntervalMin = 30f;
-    [Header("两次随机事件之间的最长等待时间，秒")]
+    [Header("两次事件之间的最长等待时间，秒；只有等待时间随机，事件按顺序轮换")]
     [Min(1f)] public float specialEventIntervalMax = 60f;
+    [Header("事件轮换从哪种开始：1疯狂海域、2极光祝福、3漩涡风暴")]
+    [Range(1, 3)] public int firstSpecialEventType = 1;
     [Header("疯狂海域事件持续时间，秒")]
     [Min(1f)] public float madnessEventDuration = 15f;
-    [Header("疯狂海域期间非玩家鱼移动速度倍率")]
-    [Min(1f)] public float madnessSpeedMultiplier = 1.6f;
-    [Header("疯狂海域期间NPC刷新检查加速倍率")]
-    [Min(1f)] public float madnessRefreshMultiplier = 2f;
+    [Header("疯狂海域期间非玩家鱼移动和游泳动画速度倍率；默认2.2倍")]
+    [Min(1f)] public float madnessSpeedMultiplier = 2.2f;
+    [Header("疯狂海域期间NPC刷新检查加速倍率；默认3倍，更容易看到补鱼")]
+    [Min(1f)] public float madnessRefreshMultiplier = 3f;
+    [Header("疯狂海域期间额外允许存在的普通NPC数量；事件结束后恢复平时数量")]
+    [Min(0)] public int madnessNpcExtraCount = 8;
+    [Header("疯狂海域每次刷新检查最多补充多少条NPC；与刷新倍率共同生效")]
+    [Min(1)] public int madnessNpcSpawnPerTick = 3;
     [Header("疯狂海域黑暗的间歇时长，秒")]
     [Min(0.1f)] public float darknessFlashDuration = 2f;
     [Header("疯狂海域随机黑暗之间的最短间隔，秒")]
@@ -193,6 +202,8 @@ public class FishManager : MonoBehaviour
     public Vector3 upgradeEffectLocalOffset = Vector3.zero;
     [Header("是否让升级特效自动使用玩家鱼的渲染层级并显示在鱼前面")]
     public bool upgradeEffectInFront = true;
+    [Header("F5运行时参数面板缩放倍率；可以在JSON中设置")]
+    [Range(0.5f, 3f)] public float debugPanelScale = 1f;
 
     [HideInInspector] public Vector2 minBounds;
     [HideInInspector] public Vector2 maxBounds;
@@ -212,6 +223,8 @@ public class FishManager : MonoBehaviour
     private float nextDarknessTime;
     private float darknessEndTime;
     private int activeEventType;
+    private int nextSpecialEventType = 1;
+    private bool hasStartedSpecialEvent;
     private GameObject auroraEffectInstance;
     private GameObject darknessEffectInstance;
     private SpriteRenderer darknessRenderer;
@@ -303,11 +316,15 @@ public class FishManager : MonoBehaviour
         }
 
         if (mainCamera == null) mainCamera = Camera.main;
+        FishManagerRuntimeConfig runtimeConfig = GetComponent<FishManagerRuntimeConfig>();
+        if (runtimeConfig == null) runtimeConfig = gameObject.AddComponent<FishManagerRuntimeConfig>();
+        runtimeConfig.Initialize(this);
         CalculateScreenBounds();
     }
 
     private void Start()
     {
+        nextSpecialEventType = Mathf.Clamp(firstSpecialEventType, 1, 3);
         SpawnInitialEntities();
         nextNpcPopulationCheck = Time.time + Mathf.Max(0.2f, npcPopulationCheckInterval);
         nextItemSpawnTime = Time.time + Mathf.Max(0.2f, itemRespawnInterval);
@@ -337,8 +354,8 @@ public class FishManager : MonoBehaviour
 
         if (activeEventType == 3 && Time.time >= nextVortexSpawnTime)
         {
+            if (vortices.Count < Mathf.Max(1, maxActiveVortices)) SpawnVortexEvent();
             ScheduleNextVortex();
-            if (vortices.Count < Mathf.Max(0, maxActiveVortices)) SpawnVortexEvent();
         }
     }
 
@@ -675,19 +692,20 @@ public class FishManager : MonoBehaviour
     private int GetDesiredNpcCount()
     {
         if (initialNpcCount <= 0) return 0;
-        if (HasActivePlayers()) return initialNpcCount;
-
-        int target = initialNpcCount / 2;
-        if (keepEveryNpcTypeVisible && NPCFish != null)
+        int target = initialNpcCount;
+        if (!HasActivePlayers())
         {
-            List<GameObject> uniquePrefabs = new List<GameObject>();
-            for (int i = 0; i < NPCFish.Length; i++)
+            target = initialNpcCount / 2;
+            if (keepEveryNpcTypeVisible && NPCFish != null)
             {
-                if (NPCFish[i] != null && !uniquePrefabs.Contains(NPCFish[i]))
-                    uniquePrefabs.Add(NPCFish[i]);
+                List<GameObject> uniquePrefabs = new List<GameObject>();
+                for (int i = 0; i < NPCFish.Length; i++)
+                    if (NPCFish[i] != null && !uniquePrefabs.Contains(NPCFish[i])) uniquePrefabs.Add(NPCFish[i]);
+                target = Mathf.Max(target, uniquePrefabs.Count);
             }
-            target = Mathf.Max(target, uniquePrefabs.Count);
         }
+        if (activeEventType == 1 && Time.time < activeEventEndTime)
+            target += Mathf.Max(0, madnessNpcExtraCount);
         return target;
     }
 
@@ -748,7 +766,10 @@ public class FishManager : MonoBehaviour
             }
         }
 
-        int remaining = fillAll ? targetCount - activeNpcFish.Count : Mathf.Min(1, targetCount - activeNpcFish.Count);
+        int maximumPerCheck = activeEventType == 1 && Time.time < activeEventEndTime
+            ? Mathf.Max(1, madnessNpcSpawnPerTick) : 1;
+        int remaining = fillAll ? targetCount - activeNpcFish.Count :
+            Mathf.Min(maximumPerCheck, targetCount - activeNpcFish.Count);
         for (int i = 0; i < remaining; i++)
         {
             if (NPCFish == null || NPCFish.Length == 0) break;
@@ -1489,39 +1510,38 @@ public class FishManager : MonoBehaviour
 
     private bool TryFindVortexSpawnPosition(out Vector2 result)
     {
+        // 事件漩涡属于全屏特殊事件：使用完整相机活动边界，道具的位置和间距不参与判断。
         float minVortexSquared = Mathf.Max(0f, vortexMinSpacing) * Mathf.Max(0f, vortexMinSpacing);
-        float minItemSquared = Mathf.Max(0f, itemVortexSpacing) * Mathf.Max(0f, itemVortexSpacing);
         int attempts = Mathf.Max(1, vortexPlacementAttempts);
 
         for (int i = 0; i < attempts; i++)
         {
-            Vector2 position = GetRandomCentralSpawnPosition(vortexSpawnCenterRatio);
-            bool free = true;
+            Vector2 position = GetRandomPosition();
+            bool overlapsVortex = false;
 
-            for (int j = 0; j < vortices.Count; j++)
+            // 只检查其他事件漩涡之间的间距；普通道具不会限制事件漩涡生成。
+            if (minVortexSquared > 0f)
             {
-                if (vortices[j].visual == null || Time.time >= vortices[j].expiresAt) continue;
-                if ((vortices[j].position - position).sqrMagnitude < minVortexSquared) { free = false; break; }
-            }
-            if (!free) continue;
-
-            if (minItemSquared > 0f)
-            {
-                for (int j = 0; j < activeItems.Count; j++)
+                for (int j = 0; j < vortices.Count; j++)
                 {
-                    GameObject itemObj = activeItems[j];
-                    if (itemObj == null || !itemObj.activeInHierarchy) continue;
-                    if (((Vector2)itemObj.transform.position - position).sqrMagnitude < minItemSquared) { free = false; break; }
+                    if (vortices[j].visual == null || Time.time >= vortices[j].expiresAt) continue;
+                    if ((vortices[j].position - position).sqrMagnitude < minVortexSquared)
+                    {
+                        overlapsVortex = true;
+                        break;
+                    }
                 }
             }
 
-            if (!free) continue;
-            result = position;
+            if (overlapsVortex) continue;
+            result = ClampPosition(position);
             return true;
         }
 
-        result = Vector2.zero;
-        return false;
+        // 全屏范围内仍找不到足够间距时，允许事件漩涡彼此重叠，避免事件空跑。
+        result = ClampPosition(GetRandomPosition());
+        Debug.LogWarning("[FishManager] 全屏范围内没有满足漩涡之间最小距离的位置，已允许事件漩涡重叠；普通道具位置不参与生成判定。");
+        return true;
     }
 
     private ItemType GetItemTypeByIndex(int index)
@@ -1584,7 +1604,7 @@ public class FishManager : MonoBehaviour
     {
         if (activeEventType == 0)
         {
-            if (Time.time >= nextEventTime) BeginRandomEvent();
+            if (Time.time >= nextEventTime) BeginNextSpecialEvent();
             return;
         }
 
@@ -1597,10 +1617,12 @@ public class FishManager : MonoBehaviour
         if (activeEventType == 1) TickMadnessDarkness();
     }
 
-    private void BeginRandomEvent()
+    private void BeginNextSpecialEvent()
     {
-        // 1疯狂海域、2极光祝福、3漩涡风暴；一次只会发生一种事件。
-        activeEventType = Random.Range(1, 4);
+        // 固定按1疯狂海域 -> 2极光祝福 -> 3漩涡风暴轮换，不再随机抽事件。
+        activeEventType = Mathf.Clamp(nextSpecialEventType, 1, 3);
+        nextSpecialEventType = activeEventType == 3 ? 1 : activeEventType + 1;
+        hasStartedSpecialEvent = true;
         if (activeEventType == 1)
         {
             activeEventEndTime = Time.time + Mathf.Max(1f, madnessEventDuration);
@@ -1617,13 +1639,25 @@ public class FishManager : MonoBehaviour
         else
         {
             activeEventEndTime = Time.time + Mathf.Max(1f, vortexStormDuration);
-            int count = Mathf.Min(Mathf.Max(0, maxActiveVortices), Mathf.Max(0, initialVortexCount));
-            for (int i = 0; i < count; i++) SpawnVortexEvent();
+            int maxCount = Mathf.Max(1, maxActiveVortices);
+            int count = Mathf.Clamp(initialVortexCount, 1, maxCount);
+            int spawnedCount = 0;
+            Debug.Log("[FishManager] 漩涡风暴开始：Prefab=" +
+                (vortexEventPrefab != null ? vortexEventPrefab.name : "未配置，使用备用漩涡") +
+                "，初始数量=" + count + "，最大数量=" + maxCount +
+                "，生成范围=全屏，事件漩涡最小间距=" + vortexMinSpacing.ToString("F2") +
+                "，普通道具间距不参与判定");
+            for (int i = 0; i < count; i++)
+                if (SpawnVortexEvent()) spawnedCount++;
+            if (spawnedCount == 0)
+                Debug.LogError("[FishManager] 漩涡风暴已触发，但没有成功生成任何漩涡。请检查前面的Spawn日志、EntityRoot和Prefab组件。");
             ScheduleNextVortex();
         }
 
-        Debug.Log("触发随机事件：" +
-            (activeEventType == 1 ? "疯狂海域" : activeEventType == 2 ? "极光祝福" : "漩涡风暴"));
+        Debug.Log("触发轮换事件：" + GetEventName(activeEventType) + "，下一事件：" +
+            GetEventName(nextSpecialEventType) + "，当前普通NPC：" + activeNpcFish.Count +
+            "，目标普通NPC：" + GetDesiredNpcCount() +
+            (activeEventType == 1 ? "，NPC速度倍率：" + madnessSpeedMultiplier.ToString("F1") : ""));
     }
 
     private void EndSpecialEvent()
@@ -1644,8 +1678,10 @@ public class FishManager : MonoBehaviour
             auroraEffectInstance = null;
         }
 
+        bool wasMadness = activeEventType == 1;
         activeEventType = 0;
         activeEventEndTime = 0f;
+        if (wasMadness) RefreshNpcPopulation(true); // 疯狂海域结束恢复正常NPC数量。
         ScheduleNextSpecialEvent();
     }
 
@@ -1768,9 +1804,14 @@ public class FishManager : MonoBehaviour
     private GameObject GetVortexPrefabSource()
     {
         if (vortexEventPrefab != null) return vortexEventPrefab;
+        return GetOrCreateFallbackVortexPrefab();
+    }
+
+    private GameObject GetOrCreateFallbackVortexPrefab()
+    {
         if (fallbackVortexPrefab != null) return fallbackVortexPrefab;
 
-        // 没有提供旋转特效Prefab时，使用不带脚本旋转的静态占位图形。
+        // 没有提供可见Prefab时，创建静态占位图形；不额外旋转，由正式特效自行表现旋转。
         generatedVortexTexture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
         Color[] colors = new Color[64];
         for (int y = 0; y < 8; y++)
@@ -1798,19 +1839,89 @@ public class FishManager : MonoBehaviour
         return fallbackVortexPrefab;
     }
 
+    private void EnsureVortexEventRenderersEnabled(GameObject visual)
+    {
+        if (visual == null) return;
+
+        // 漩涡特效沿用Prefab本身配置的GameObject Layer、Sorting Layer和Order in Layer。
+        // 这里只确保可见节点及Renderer处于启用状态，不强制修改渲染层级。
+        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] == null) continue;
+
+            Transform current = renderers[i].transform;
+            while (current != null)
+            {
+                if (!current.gameObject.activeSelf) current.gameObject.SetActive(true);
+                if (current == visual.transform) break;
+                current = current.parent;
+            }
+
+            renderers[i].enabled = true;
+        }
+
+        if (renderers.Length == 0)
+            Debug.LogWarning("[FishManager] 漩涡Prefab中没有找到Renderer，可能没有可见的Sprite/粒子渲染器：" + visual.name);
+    }
+
     private void ScheduleNextVortex()
     {
         float minimum = Mathf.Max(0.5f, Mathf.Min(vortexSpawnIntervalMin, vortexSpawnIntervalMax));
         float maximum = Mathf.Max(minimum, Mathf.Max(vortexSpawnIntervalMin, vortexSpawnIntervalMax));
-        nextVortexSpawnTime = Time.time + Random.Range(minimum, maximum);
+        float delay = Random.Range(minimum, maximum);
+        // 不允许随机间隔超过事件剩余时间太多，避免前一个漩涡消失后直到事件结束都不再补充。
+        if (activeEventType == 3 && activeEventEndTime > Time.time + 1f)
+            delay = Mathf.Min(delay, Mathf.Max(0.5f, activeEventEndTime - Time.time - 1f));
+        nextVortexSpawnTime = Time.time + delay;
     }
 
-    private void SpawnVortexEvent()
+    private bool SpawnVortexEvent()
     {
-        if (vortices.Count >= Mathf.Max(0, maxActiveVortices)) return;
+        int maxCount = Mathf.Max(1, maxActiveVortices);
+        if (vortices.Count >= maxCount)
+        {
+            Debug.LogWarning("[FishManager] 漩涡生成跳过：已达到maxActiveVortices=" + maxCount);
+            return false;
+        }
 
         Vector2 position;
-        if (!TryFindVortexSpawnPosition(out position)) return;
+        if (!TryFindVortexSpawnPosition(out position))
+        {
+            // 保护性兜底：即使场上道具很多、无法满足间距，也不能让整个事件空白。
+            position = ClampPosition((minBounds + maxBounds) * 0.5f);
+            Debug.LogWarning("[FishManager] 无法找到满足间距的漩涡位置，改在屏幕中心生成。");
+        }
+
+        GameObject prefab = GetVortexPrefabSource();
+        if (prefab == null)
+        {
+            Debug.LogError("[FishManager] 漩涡Prefab和备用Prefab都创建失败，无法生成漩涡。");
+            return false;
+        }
+
+        GameObject visual = LeanPool.Spawn(prefab, entityRoot);
+        if (visual == null)
+        {
+            Debug.LogError("[FishManager] LeanPool.Spawn返回空对象，Prefab=" + prefab.name + "。请确认该对象是有效Prefab且LeanPool可正常使用。");
+            return false;
+        }
+
+        // 如果拖入的Prefab只是空容器、没有任何可渲染内容，则回退到可见占位漩涡，避免事件完全看不见。
+        Renderer[] prefabRenderers = visual.GetComponentsInChildren<Renderer>(true);
+        ParticleSystem[] prefabParticles = visual.GetComponentsInChildren<ParticleSystem>(true);
+        if (prefabRenderers.Length == 0 && prefabParticles.Length == 0 && vortexEventPrefab != null)
+        {
+            Debug.LogWarning("[FishManager] 已指定的漩涡Prefab没有Renderer/ParticleSystem，临时改用可见占位漩涡。Prefab=" + prefab.name);
+            LeanPool.Despawn(visual);
+            prefab = GetOrCreateFallbackVortexPrefab();
+            visual = LeanPool.Spawn(prefab, entityRoot);
+            if (visual == null)
+            {
+                Debug.LogError("[FishManager] 备用漩涡生成失败。");
+                return false;
+            }
+        }
 
         VortexState state = new VortexState();
         state.id = nextVortexId++;
@@ -1824,35 +1935,54 @@ public class FishManager : MonoBehaviour
         state.nextTurnTime = Time.time + Random.Range(
             Mathf.Max(0.2f, Mathf.Min(vortexTurnIntervalMin, vortexTurnIntervalMax)),
             Mathf.Max(0.2f, Mathf.Max(vortexTurnIntervalMin, vortexTurnIntervalMax)));
+        state.visual = visual;
 
-        GameObject prefab = GetVortexPrefabSource();
-        state.visual = LeanPool.Spawn(prefab, entityRoot);
-        if (state.visual == null) return;
+        visual.SetActive(true);
+        visual.transform.position = new Vector3(position.x, position.y, ActiveFishPlaneZ);
+        visual.transform.rotation = prefab.transform.rotation;
+        if (prefab == fallbackVortexPrefab)
+        {
+            visual.transform.localScale = Vector3.one * Mathf.Max(0.1f, vortexVisualDiameter);
+        }
+        else
+        {
+            Vector3 prefabScale = prefab.transform.localScale;
+            // 2D特效的Z缩放若为0，会把部分3D粒子/网格特效压扁；只修正实例，不改Prefab资源。
+            if (Mathf.Abs(prefabScale.x) < 0.001f) prefabScale.x = 1f;
+            if (Mathf.Abs(prefabScale.y) < 0.001f) prefabScale.y = 1f;
+            if (Mathf.Abs(prefabScale.z) < 0.001f) prefabScale.z = 1f;
+            visual.transform.localScale = prefabScale * Mathf.Max(0.1f, vortexEventScaleMultiplier);
+        }
 
-        state.visual.SetActive(true);
-        state.visual.transform.position = new Vector3(position.x, position.y, ActiveFishPlaneZ);
-        state.visual.transform.rotation = prefab.transform.rotation;
-        if (vortexEventPrefab == null)
-            state.visual.transform.localScale = Vector3.one * Mathf.Max(0.1f, vortexVisualDiameter);
+        // 漩涡事件不参与道具拾取；即使复用道具Prefab也关闭其所有碰撞体。
+        Collider2D[] colliders = visual.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < colliders.Length; i++)
+            if (colliders[i] != null) colliders[i].enabled = false;
 
-        // 漩涡事件属于范围控制器，不应触发道具拾取及其他物理碰撞。
-        Collider2D[] colliders = state.visual.GetComponentsInChildren<Collider2D>(true);
-        for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = false;
-        if (state.visual.GetComponentInChildren<ItemBase>(true) != null)
-            Debug.LogWarning("漩涡风暴特效Prefab不要挂ItemBase，场景事件与漩涡拾取道具是两种独立机制。");
+        EnsureVortexEventRenderersEnabled(visual);
 
-        // 每次从对象池取出漩涡都从第0帧重新播放粒子，避免出现有循环标记却没有活跃粒子的情况。
-        ParticleSystem[] particleSystems = state.visual.GetComponentsInChildren<ParticleSystem>(true);
+        // 每个粒子系统都重新启动，并禁止StopAction自动销毁对象池实例。
+        ParticleSystem[] particleSystems = visual.GetComponentsInChildren<ParticleSystem>(true);
         for (int i = 0; i < particleSystems.Length; i++)
         {
-            // 对象池里的粒子不能让 ParticleSystem 的 StopAction 自己 Destroy 掉。
+            if (particleSystems[i] == null) continue;
             ParticleSystem.MainModule main = particleSystems[i].main;
             main.stopAction = ParticleSystemStopAction.None;
             particleSystems[i].Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             particleSystems[i].Play(false);
         }
 
+        if (visual.GetComponentInChildren<ItemBase>(true) != null)
+            Debug.LogWarning("[FishManager] 漩涡事件复用了带ItemBase的道具Prefab；碰撞已关闭。如果视觉正常可忽略此提示。");
+
         vortices.Add(state);
+        Debug.Log("[FishManager] 漩涡生成成功：实例=" + visual.name +
+            "，位置=" + position.ToString() +
+            "，渲染器=" + visual.GetComponentsInChildren<Renderer>(true).Length +
+            "，粒子系统=" + particleSystems.Length +
+            "，缩放=" + visual.transform.localScale.ToString() +
+            "，剩余时间=" + (state.expiresAt - Time.time).ToString("F1") + "秒");
+        return true;
     }
 
     private void DespawnVortexEvent(VortexState state)
@@ -1870,7 +2000,7 @@ public class FishManager : MonoBehaviour
 
     private void TickVortexEvents()
     {
-        int maxCount = Mathf.Max(0, maxActiveVortices);
+        int maxCount = Mathf.Max(1, maxActiveVortices);
         for (int i = vortices.Count - 1; i >= 0; i--)
         {
             VortexState state = vortices[i];
@@ -1953,6 +2083,40 @@ public class FishManager : MonoBehaviour
     {
         int vortexId;
         return TryGetVortexCaptureTarget(fish, fishPosition, out vortexId, out vortexCenter);
+    }
+
+    // 运行时调参面板由FishManagerRuntimeConfig独立组件绘制和保存；这里仅提供状态/动作接口。
+    public string GetRuntimeStatusText()
+    {
+        int remaining = Mathf.CeilToInt(Mathf.Max(0f,
+            (activeEventType == 0 ? nextEventTime : activeEventEndTime) - Time.time));
+        return "当前：" + GetEventName(activeEventType) + " | 下一次：" + GetEventName(nextSpecialEventType) +
+            " | 倒计时：" + remaining + "秒 | NPC：" + activeNpcFish.Count + "/" + GetDesiredNpcCount() +
+            " | 非玩家速度：x" + NonPlayerEventSpeedMultiplier.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    public void RequestRuntimeNextEvent()
+    {
+        if (activeEventType != 0) EndSpecialEvent();
+        nextEventTime = Time.time;
+    }
+
+    public void NotifyRuntimeConfigApplied()
+    {
+        if (mainCamera != null) CalculateScreenBounds();
+        nextNpcPopulationCheck = Mathf.Min(nextNpcPopulationCheck, Time.time + 0.1f);
+        nextItemSpawnTime = Mathf.Min(nextItemSpawnTime, Time.time + 0.1f);
+        if (!hasStartedSpecialEvent) nextSpecialEventType = Mathf.Clamp(firstSpecialEventType, 1, 3);
+    }
+
+    // 特殊事件名称转换，供游戏事件日志使用。
+    // Prefab、Transform、Camera 和数组只能由 Unity Inspector 绑定，运行时只读显示，避免丢失引用。
+    private static string GetEventName(int type)
+    {
+        if (type == 1) return "疯狂海域";
+        if (type == 2) return "极光祝福";
+        if (type == 3) return "漩涡风暴";
+        return "等待中";
     }
 
     private void OnDestroy()

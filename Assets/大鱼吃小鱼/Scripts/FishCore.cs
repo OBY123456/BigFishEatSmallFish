@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Lean.Pool;
 
 public class FishCore : MonoBehaviour
@@ -70,6 +70,8 @@ public class FishCore : MonoBehaviour
     private Rigidbody2D rb;
     private IMovement movementComponent;
     private FishVisuals visuals;
+    private float originalNpcAnimationSpeed = 1f;
+    private bool hasCachedNpcAnimationSpeed;
     private Vector3 lastEatTargetWorldPosition;
     private bool hasPendingEatPunchOnUpgrade;
 
@@ -78,6 +80,11 @@ public class FishCore : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         movementComponent = GetComponent<IMovement>();
         visuals = GetComponent<FishVisuals>();
+        if (visuals != null && visuals.animator != null)
+        {
+            originalNpcAnimationSpeed = visuals.animator.speed;
+            hasCachedNpcAnimationSpeed = true;
+        }
 
         if (FishManager.Instance != null)
             baseSpeed = FishManager.Instance.globalBaseSpeed;
@@ -105,14 +112,26 @@ public class FishCore : MonoBehaviour
         // 支持运行时调整 globalBaseSpeed、等级或每级增长比例。
         RefreshLevelSpeed();
 
+        float eventSpeedMultiplier = !isPlayer && FishManager.Instance != null
+            ? FishManager.Instance.NonPlayerEventSpeedMultiplier : 1f;
+        // 疯狂海域不仅加快位移，也同步加快NPC/特殊鱼的游泳动画；事件结束立刻还原。
+        if (!isPlayer && visuals != null)
+        {
+            // FishCore.Awake 可能早于 FishVisuals.Awake，首次用到 Animator 时再补记原始速度。
+            if (!hasCachedNpcAnimationSpeed && visuals.animator != null)
+            {
+                originalNpcAnimationSpeed = visuals.animator.speed;
+                hasCachedNpcAnimationSpeed = true;
+            }
+            visuals.SetAnimationSpeed(originalNpcAnimationSpeed * eventSpeedMultiplier);
+        }
+
         if (rb != null && TickVortexCapture()) return;
         if (rb != null && TickItemVortexPull()) return;
 
         float activeAreaSlow = Time.time < areaSlowUntil ? areaSlowFactor : 1f;
         float finalSpeed = currentSpeed * speedMultiplier * temporarySpeedBoost *
-            temporarySlowFactor * activeAreaSlow * (isBoosting ? boostMultiplier : 1f);
-        if (FishManager.Instance != null && !isPlayer)
-            finalSpeed *= FishManager.Instance.NonPlayerEventSpeedMultiplier;
+            temporarySlowFactor * activeAreaSlow * (isBoosting ? boostMultiplier : 1f) * eventSpeedMultiplier;
 
         // 防崩处理：如果组件或刚体丢失，直接跳过
         if (movementComponent != null && movementComponent.IsActive && rb != null)

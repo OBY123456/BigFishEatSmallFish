@@ -24,8 +24,15 @@ public class MyMqtt : MonoSingle<MyMqtt>
 
     public string MachineCode
     {
-        get { return machineCode; }
+        get
+        {
+            if (string.IsNullOrWhiteSpace(machineCode)) TryInitializeMachineCode();
+            return machineCode;
+        }
     }
+
+    private float nextMachineCodeRetryTime;
+    private bool machineCodeNetworkCheckStarted;
 
     public bool IsNetwork = false;
 
@@ -43,24 +50,30 @@ public class MyMqtt : MonoSingle<MyMqtt>
         MqttEvent.Mqttevent -= MqttEvent_Mqttevent;
         MqttEvent.Mqttevent += MqttEvent_Mqttevent;
         Loom.Initialize();
-        string V1 = string.Empty;
-        string V2 = string.Empty;
-        AESEncryption.PlayerGet(Authorization.MachineKey, HardwareCodeUtil.GetMac(), ref V1, ref V2);
-        if (V1.Equals(V2))
+        TryInitializeMachineCode();
+    }
+
+    private bool TryInitializeMachineCode()
+    {
+        if (!string.IsNullOrWhiteSpace(machineCode)) return true;
+        if (Time.unscaledTime < nextMachineCodeRetryTime) return false;
+        nextMachineCodeRetryTime = Time.unscaledTime + 2f;
+
+        string resolvedMachineCode;
+        if (!Authorization.TryGetStoredMachineCode(out resolvedMachineCode) ||
+            string.IsNullOrWhiteSpace(resolvedMachineCode))
+            return false;
+
+        machineCode = resolvedMachineCode;
+        if (DebugManager.Instance != null) DebugManager.Instance.AddData("设备编码", machineCode);
+        Debug.Log("[MyMqtt] 已从当前授权缓存读取设备编码，开始检查网络。");
+
+        if (!machineCodeNetworkCheckStarted)
         {
-            machineCode = V1;
-            //Debug.Log("machineCode==" + machineCode);
-            DebugManager.Instance.AddData("设备编码", machineCode);
-            if (!string.IsNullOrEmpty(machineCode))
-            {
-                //StartCoroutine(IsGetHost(MQTT.Host, OnGetHostCallBack));
-                IsGetHostAsync(MQTT.Host, OnGetHostCallBack);
-            }
-            else
-            {
-                DebugManager.LogError("设备不合法");
-            }
+            machineCodeNetworkCheckStarted = true;
+            IsGetHostAsync(MQTT.Host, OnGetHostCallBack);
         }
+        return true;
     }
 
     void OnGetHostCallBack(bool b)
@@ -98,6 +111,10 @@ public class MyMqtt : MonoSingle<MyMqtt>
 
     private void Update()
     {
+        // Authorization may finish after this persistent singleton's Awake; retry without blocking the main thread.
+        if (string.IsNullOrWhiteSpace(machineCode) && Time.unscaledTime >= nextMachineCodeRetryTime)
+            TryInitializeMachineCode();
+
         int processed = 0;
         int safeLimit = Mathf.Max(1, maxMessagesPerFrame);
 
