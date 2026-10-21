@@ -4,8 +4,6 @@ using System.Text;
 using System.IO;
 using UnityEngine;
 
-//namespace Encryption
-//{
 /// <summary>
 /// AES加密
 /// </summary>
@@ -106,6 +104,7 @@ public static class AESEncryption
     public static void PlayerSet(string key, string value, string AesKey)
     {
         PlayerPrefs.SetString(key, value + "|" + Encrypt(value, AesKey));
+        PlayerPrefs.Save();
     }
 
     /// <summary>
@@ -319,11 +318,4 @@ public static class AESEncryption
             File.Delete(TempPath);
         }
     }
-
-    public static DateTime ToBeiJingTime(this DateTime time)
-    {
-        return TimeZoneInfo.ConvertTimeBySystemTimeZoneId(time, "China Standard Time");
-    }
 }
-
-//}

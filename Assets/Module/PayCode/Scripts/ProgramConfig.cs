@@ -23,8 +23,6 @@ namespace Config
         public PaymentModel 收费模式;
 
         public float 费用 = 0.01f;
-
-        public LanguageSetting.LanguageType 语言类型 = LanguageSetting.LanguageType.中文;
     }
 
 

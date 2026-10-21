@@ -10,7 +10,7 @@ namespace AdminSetting
 {
     public class AdminPanel : MonoBehaviour
     {
-        public Dropdown pay,language;
+        public Dropdown pay;
 
         public Toggle MouseTog;
 
@@ -54,7 +54,6 @@ namespace AdminSetting
 
         private void ValueInit()
         {
-            language.value = (int)programData.语言类型;
             pay.value = (int)programData.收费模式;
             switch (programData.收费模式)
             {
@@ -124,7 +123,6 @@ namespace AdminSetting
         {
             programData.是否显示鼠标 = MouseTog.isOn;
             programData.收费模式 = (PaymentModel)pay.value;
-            programData.语言类型 = (LanguageSetting.LanguageType)language.value;
             programData.费用 = float.Parse(inputField_收费设置.text);
             ProgramConfig.Instance?.SaveData();
             Tips.alpha = 1;
