@@ -481,6 +481,31 @@ public class FishManagerRuntimeConfig : MonoBehaviour
     {
         Type type = field.FieldType;
         float safeWidth = Mathf.Max(90f, availableWidth);
+
+        // 全局鱼大小使用0.5~1.0滑块，拖动时立即更新所有现存鱼，不必点击“应用修改”。
+        if (type == typeof(float) && field.Name == "globalFishScale")
+        {
+            float before = Mathf.Clamp(manager.globalFishScale, 0.5f, 1f);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("实时大小", keyStyle, GUILayout.Width(62f));
+            float after = GUILayout.HorizontalSlider(before, 0.5f, 1f,
+                GUILayout.ExpandWidth(true), GUILayout.MinWidth(100f));
+            GUILayout.Label(after.ToString("F2", CultureInfo.InvariantCulture), keyStyle,
+                GUILayout.Width(52f));
+            GUILayout.EndHorizontal();
+
+            if (!Mathf.Approximately(after, before))
+            {
+                manager.SetGlobalFishScale(after);
+                string formatted = FormatFloat(manager.globalFishScale);
+                editText[field.Name] = formatted;
+                originalText[field.Name] = formatted;
+                dirtyFields.Remove(field.Name);
+                statusText = "全场鱼大小已实时调整为 " + formatted + "；点击“应用并保存TXT”可保存设置。";
+            }
+            return;
+        }
+
         if (type == typeof(bool))
         {
             bool before = boolDraft.ContainsKey(field.Name) ? boolDraft[field.Name] : (bool)field.GetValue(manager);
@@ -585,7 +610,7 @@ public class FishManagerRuntimeConfig : MonoBehaviour
         if (selectedCategory == 2) return lower.Contains("npc") || lower.Contains("specialfish") || lower.Contains("shark") || lower.Contains("lightning") || lower.Contains("giant");
         if (selectedCategory == 3) return lower.Contains("item") || lower.Contains("shield");
         if (selectedCategory == 4) return lower.Contains("vortex");
-        if (selectedCategory == 5) return lower.Contains("player") || lower.Contains("boost") || lower.Contains("levelspeed") || lower.Contains("globalbasespeed") || lower.Contains("keyboard");
+        if (selectedCategory == 5) return lower.Contains("player") || lower.Contains("boost") || lower.Contains("levelspeed") || lower.Contains("globalbasespeed") || lower.Contains("globalfishscale") || lower.Contains("keyboard");
         if (selectedCategory == 6) return lower.Contains("boundary") || lower.Contains("bounds") || lower.Contains("camera") || lower.Contains("fishplane") || lower.Contains("root") || lower.Contains("padding") || lower.Contains("debugpanelscale");
         return true;
     }

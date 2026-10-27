@@ -10,6 +10,8 @@ public class FishManager : MonoBehaviour
 
     [Header("所有鱼的1级基础游动速度，其他等级在此速度上按比例递增")]
     public float globalBaseSpeed = 5f;
+    [Header("全场所有鱼的统一大小倍率：0.5为原始大小的一半，1为原始大小")]
+    [Range(0.5f, 1f)] public float globalFishScale = 1f;
     [Header("每提高1级的基础移速增长比例：0.1代表每级增加10%，2级为1.1倍、3级为1.2倍")]
     [Min(0f)] public float levelSpeedIncreasePerLevel = 0.1f;
     [Header("玩家进场后的普通NPC目标数量（无人时约一半）")]
@@ -958,6 +960,8 @@ public class FishManager : MonoBehaviour
             return null;
         }
 
+        // 每次从LeanPool取出都按预制体的原始尺寸应用全局倍率，避免反复缩放造成累计误差。
+        core.ApplyGlobalSizeMultiplier(globalFishScale);
         core.level = level;
         core.isPlayer = isPlayer;
         core.playerName = name;
@@ -2103,10 +2107,36 @@ public class FishManager : MonoBehaviour
 
     public void NotifyRuntimeConfigApplied()
     {
+        globalFishScale = Mathf.Clamp(globalFishScale, 0.5f, 1f);
+        ApplyGlobalFishScaleToActiveFish();
         if (mainCamera != null) CalculateScreenBounds();
         nextNpcPopulationCheck = Mathf.Min(nextNpcPopulationCheck, Time.time + 0.1f);
         nextItemSpawnTime = Mathf.Min(nextItemSpawnTime, Time.time + 0.1f);
         if (!hasStartedSpecialEvent) nextSpecialEventType = Mathf.Clamp(firstSpecialEventType, 1, 3);
+    }
+
+    /// <summary>
+    /// 设置全场鱼的统一尺寸倍率。F5滑块调用此方法后，场上所有鱼会立即缩放。
+    /// </summary>
+    public void SetGlobalFishScale(float value)
+    {
+        globalFishScale = Mathf.Clamp(value, 0.5f, 1f);
+        ApplyGlobalFishScaleToActiveFish();
+    }
+
+    private void ApplyGlobalFishScaleToActiveFish()
+    {
+        for (int i = allActiveFish.Count - 1; i >= 0; i--)
+        {
+            FishCore fish = allActiveFish[i];
+            if (fish == null || !fish.gameObject.activeInHierarchy)
+            {
+                allActiveFish.RemoveAt(i);
+                continue;
+            }
+
+            fish.ApplyGlobalSizeMultiplier(globalFishScale);
+        }
     }
 
     // 特殊事件名称转换，供游戏事件日志使用。

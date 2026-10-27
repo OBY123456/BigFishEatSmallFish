@@ -72,11 +72,16 @@ public class FishCore : MonoBehaviour
     private FishVisuals visuals;
     private float originalNpcAnimationSpeed = 1f;
     private bool hasCachedNpcAnimationSpeed;
+    private Vector3 originalRootLocalScale = Vector3.one;
+    private bool hasCachedOriginalRootLocalScale;
     private Vector3 lastEatTargetWorldPosition;
     private bool hasPendingEatPunchOnUpgrade;
 
     void Awake()
     {
+        // FishCore挂在鱼根物体上；缓存Prefab原始缩放，后续全局倍率始终从这里计算，不累乘。
+        originalRootLocalScale = transform.localScale;
+        hasCachedOriginalRootLocalScale = true;
         rb = GetComponent<Rigidbody2D>();
         movementComponent = GetComponent<IMovement>();
         visuals = GetComponent<FishVisuals>();
@@ -90,6 +95,21 @@ public class FishCore : MonoBehaviour
             baseSpeed = FishManager.Instance.globalBaseSpeed;
 
         RefreshLevelSpeed();
+    }
+
+    /// <summary>
+    /// 按全局倍率缩放整条鱼的根节点，碰撞体与美术同步变化；始终基于Prefab原始尺寸。
+    /// </summary>
+    public void ApplyGlobalSizeMultiplier(float multiplier)
+    {
+        if (!hasCachedOriginalRootLocalScale)
+        {
+            originalRootLocalScale = transform.localScale;
+            hasCachedOriginalRootLocalScale = true;
+        }
+
+        float safeMultiplier = Mathf.Clamp(multiplier, 0.5f, 1f);
+        transform.localScale = originalRootLocalScale * safeMultiplier;
     }
 
     /// <summary>
